@@ -80,25 +80,6 @@ async def get_date(message: types.Message, state: FSMContext):
 
     await Birthday.next()
 
-    # data = await state.get_data()
-    #
-    # birthdays = data.get('birthdays')
-    # if birthdays is None:
-    #     birthdays = []
-    # birthdays.append({
-    #     'full_name': data['full_name'],
-    #     'file_path': data['file_path'],
-    #     'description': data['description'],
-    #     'date': data['date']
-    # })
-    #
-    # updated_data = {
-    #     'birthdays': birthdays
-    # }
-    #
-    # await mongo_storage.set_data(chat=message.chat.id, user=message.from_id, data=updated_data)
-    # await state.reset_state(with_data=False)
-
     await send_list_groups(message=message)
     # await main.start(message=message)
 
