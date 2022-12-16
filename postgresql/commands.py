@@ -50,6 +50,7 @@ def update(name: str, fields: list, where: str):
     print(query)
 
 
+
 def check_where(query, where):
     if not where:
         query += " " + where
