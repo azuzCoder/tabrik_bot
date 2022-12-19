@@ -1,6 +1,9 @@
 import logging
 import menus
 
+from postgresql import commands
+from psycopg2 import errors
+
 from aiogram import executor, types
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
@@ -8,6 +11,12 @@ from config import dp
 
 
 logging.basicConfig(level=logging.INFO)
+
+
+# @dp.message_handler(content_types=types.ContentType.ANY)
+# async def test(message: types.Message):
+#     print(message)
+#     print(message.text)
 
 
 @dp.message_handler(state='*', commands='cancel')
@@ -25,6 +34,10 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 
 @dp.message_handler(commands='start')
 async def start(message: types.Message):
+    try:
+        commands.insert("users", {"chat_id": message.from_id})
+    except errors.UniqueViolation:
+        pass
     await message.answer(text='Asosiy sahifa', reply_markup=await menus.main_menu())
     # logging.info('start() is working!!!')
 
