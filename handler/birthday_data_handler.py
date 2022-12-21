@@ -138,6 +138,9 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
         for inline_button in inline_keyboard[i]:
             if inline_button.text.endswith('✅'):
                 commands.insert("birth_group", {'birth_id': birth_id, 'group_id': int(inline_button.callback_data)})
+    myself = callback.message.reply_markup.inline_keyboard[0][0]
+    if myself.text.endswith('✅'):
+        commands.insert("birth_user", {'birth_id': birth_id, 'user_id': callback.message.from_id})
 
 
 
@@ -178,7 +181,7 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
     #         }
     #         await mongo_storage.set_data(user=groups_list[i][0].callback_data, data=updated_data)
 
-    await state.reset_state(with_data=False)
+    await state.reset_state()
 
     await callback.message.delete_reply_markup()
     await callback.message.answer('Malumotlar saqlandi')

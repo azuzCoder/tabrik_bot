@@ -82,6 +82,7 @@ def execute_commit(db, query: str):
 def execute_fetch(db, query: str):
     cursor = db.cursor()
     cursor.execute(query)
+    db.commit()
     return cursor.fetchall()
 
 
