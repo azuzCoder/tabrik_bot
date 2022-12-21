@@ -162,7 +162,8 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
     #             'date': data['date']
     #         })
     #         updated_data = {
-    #             'birthdays': birthdays
+    #             'bir
+    #             thdays': birthdays
     #         }
     #         await mongo_storage.set_data(user=groups_list[i][0].callback_data, data=updated_data)
 
@@ -198,5 +199,6 @@ async def edit_checked_button(callback: types.CallbackQuery, state: FSMContext):
                 callback_data=inline_button.callback_data)
             )
     await callback.message.edit_reply_markup(edited_keyboard)
+
 
 
