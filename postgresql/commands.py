@@ -14,12 +14,14 @@ def insert(name: str, fields: dict):
     values = ""
     for key, val in fields.items():
         columns += key + ","
-        values += val + ","
-    query = "INSERT INTO " + name + "(" + columns.removesuffix(",") + ") VALUES (" + values.removesuffix(",") + ");"
+        values += check(val) + ","
+    query = "INSERT INTO " + name + "(" + columns.removesuffix(",") + ") VALUES (" + values.removesuffix(",") + ") RETURNING id;"
+    print(query)
 
     db = get_db()
-    execute_commit(db, query)
+    idx = execute_fetch(db, query)[0][0]
     close(db)
+    return idx
 
 
 def select(name: str, fields: list, where: str = None):
@@ -40,10 +42,11 @@ def update(name: str, fields: list, where: str):
     columns = ""
     for col, val in fields:
         columns += col + "="
-        if val is str:
-            columns += "'" + val + "'"
-        else:
-            columns += str(val)
+        columns += check(val)
+        # if val is str:
+        #     columns += "'" + val + "'"
+        # else:
+        #     columns += str(val)
         columns += ','
 
     query = "UPDATE " + name + " SET " + columns.removesuffix(",")
@@ -52,6 +55,12 @@ def update(name: str, fields: list, where: str):
     db = get_db()
     execute_commit(db, query)
     close(db)
+
+
+def check(val):
+    if type(val) == str:
+        return '\'' + val + '\''
+    return str(val)
 
 
 def get_db():

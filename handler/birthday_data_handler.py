@@ -4,7 +4,7 @@ from aiogram.dispatcher import FSMContext
 
 import datetime
 
-from config import bot, dp, mongo_storage
+from config import bot, dp
 from states import Birthday
 from postgresql import commands
 import menus
@@ -36,7 +36,7 @@ async def get_image(message: types.Message, state: FSMContext):
         file_id = message.photo[-1].file_id
         file = await bot.get_file(file_id=file_id)
         await state.update_data(file_path=file.file_path)
-        await file.download(destination_dir='../files/')
+        await file.download(destination_dir='files/')
 
         await message.answer('Tarif kiriting: ')
     else:
@@ -65,7 +65,7 @@ async def get_date(message: types.Message, state: FSMContext):
             return
 
         try:
-            date = datetime.date(day=day, month=month, year=year)
+            datetime.date(day=day, month=month, year=year)
         except ValueError:
             await message.answer(err)
             return
@@ -126,7 +126,18 @@ async def send_list_groups(message: types.Message):
 async def end_callback(callback: types.CallbackQuery, state: FSMContext):
     print(callback)
 
+    data = await state.get_data()
+    day, month, year = map(int, data['date'].split('.'))
+    date = datetime.date(day=day, month=month, year=year)
+    data['date'] = str(date)
+    birth_id = commands.insert("birthdays", data)
+    print('birth_id', birth_id)
 
+    inline_keyboard = callback.message.reply_markup.inline_keyboard
+    for i in range(len(inline_keyboard)-2):
+        for inline_button in inline_keyboard[i]:
+            if inline_button.text.endswith('✅'):
+                commands.insert("birth_group", {'birth_id': birth_id, 'group_id': int(inline_button.callback_data)})
 
 
 
