@@ -140,8 +140,8 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
                 commands.insert("birth_group", {'birth_id': birth_id, 'group_id': int(inline_button.callback_data)})
     myself = callback.message.reply_markup.inline_keyboard[0][0]
     if myself.text.endswith('✅'):
-        commands.insert("birth_user", {'birth_id': birth_id, 'user_id': callback.message.from_id})
-
+        user_id = commands.select("users", ['id'], "WHERE chat_id=" + str(callback.from_user.id))[0][0]
+        commands.insert("birth_user", {'birth_id': birth_id, 'user_id': user_id})
 
 
     # groups_list = callback.message.reply_markup.inline_keyboard

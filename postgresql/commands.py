@@ -31,6 +31,7 @@ def select(name: str, fields: list, where: str = None):
     query = "SELECT " + columns.removesuffix(",") + " FROM " + name
 
     query = check_where(query, where)
+    print(query)
 
     db = get_db()
     data = execute_fetch(db, query)
@@ -39,6 +40,12 @@ def select(name: str, fields: list, where: str = None):
 
 
 def update(name: str, fields: list, where: str):
+    """
+    :param name:
+    :param fields: list -> [(col, val), (col, val), ...]
+    :param where:
+    :return:
+    """
     columns = ""
     for col, val in fields:
         columns += col + "="

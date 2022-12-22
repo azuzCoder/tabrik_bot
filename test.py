@@ -1,3 +1,3 @@
-import datetime
-
-print(datetime.date.today().day)
+l = [(1,), (2,)]
+for a, in l:
+    print(a)

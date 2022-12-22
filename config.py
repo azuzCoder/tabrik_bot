@@ -13,13 +13,12 @@ bot = Bot(token=BOT_API_TOKEN)
 mongo_storage = MongoStorage()
 dp = Dispatcher(bot=bot, storage=mongo_storage)
 
-
 # APSCHEDULER configs
 tz = pytz.timezone('Asia/Tashkent')
 
-# job_defaults = {
-#     "misfire_grace_time": 3600
-# }
+job_defaults = {
+    "misfire_grace_time": 3600
+}
 
 jobstores = {
     "default": SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')
@@ -28,5 +27,5 @@ jobstores = {
 scheduler = AsyncIOScheduler(
     timezone=tz,
     jobstores=jobstores,
-    # job_defaults=job_defaults
+    job_defaults=job_defaults
 )

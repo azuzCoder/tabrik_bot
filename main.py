@@ -2,6 +2,7 @@ import pytz
 
 import logging
 import menus
+import scheduler_tasks
 
 from postgresql import commands
 from psycopg2 import errors
@@ -9,7 +10,7 @@ from psycopg2 import errors
 from aiogram import executor, types
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
-from config import dp
+from config import dp, scheduler
 
 
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +31,7 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 
 @dp.message_handler(commands='start')
 async def start(message: types.Message):
+    print(message)
 
     try:
         commands.insert("users", {'chat_id': message.from_id})
@@ -44,4 +46,6 @@ from handler import birthday_data_handler, join_left_handler
 
 
 if __name__ == '__main__':
+    scheduler.add_job(func=scheduler_tasks.congrat, trigger='cron', day_of_week='*', hour=15, minute=50)
+    scheduler.start()
     executor.start_polling(dispatcher=dp, skip_updates=True)
