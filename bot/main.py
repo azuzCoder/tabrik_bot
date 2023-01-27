@@ -7,8 +7,8 @@ from aiogram import executor
 from bot.middlewares.config import dp, scheduler
 from bot.middlewares import scheduler_tasks
 
-from bot.handlers import start_handler, birthday_handler, group_handler
-
+from bot.handlers import start_handler, group_handler
+from bot.handlers.birthday import birthday_handler, list_birtdays
 
 if __name__ == '__main__':
     scheduler.add_job(func=scheduler_tasks.congratulation, trigger='cron', day_of_week='*', hour=0, minute=5)

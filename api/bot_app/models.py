@@ -16,5 +16,5 @@ class Birthday(models.Model):
     image_path = models.CharField(max_length=255)
     congrat = models.TextField()
     date = models.DateField()
-    user = models.ForeignKey(BotUser, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(BotUser, related_name='birthdays', on_delete=models.CASCADE, null=True, blank=True)
     groups = models.ManyToManyField(JoinedGroup, blank=True)

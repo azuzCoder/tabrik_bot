@@ -14,11 +14,11 @@ async def congratulation():
         idx, name, image_path, congrat,date, user_id, groups = birthday.values()
         if checking_birthday(date):
             for group_id in groups:
-                idx, chat_id, joiend = api.get_with_id_groups(group_id).values()
-                if joiend:
+                idx, chat_id, joined = api.get(group_id, api.get_group_by_id).values()
+                if joined:
                     await send_congrat(chat_id, name, date, congrat, image_path)
         if user_id:
-            user = api.get_with_id_user(user_id)
+            user = api.get(pk=user_id, addr=api.get_user_by_id)
             if user['joined']:
                 await send_congrat(user['chat_id'], name, date, congrat, image_path)
 

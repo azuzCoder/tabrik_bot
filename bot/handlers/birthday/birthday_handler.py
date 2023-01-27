@@ -1,4 +1,7 @@
+import types
+
 from aiogram import types
+from aiogram.types.bot_command_scope import BotCommandScopeChat
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 
@@ -7,21 +10,24 @@ import datetime
 from config.settings import MEDIA_ROOT
 from bot.middlewares.config import bot, dp
 from bot.middlewares.states import Birthday
-from bot.middlewares import menus, api
+from bot.middlewares import api, bot_commands
 
 
-@dp.message_handler(Text(equals='Tug`ilgan kun qo`shish', ignore_case=True))
+@dp.message_handler(commands=['add_birthday'])
 async def input_birthday(message: types.Message):
     await Birthday.first()
 
-    await message.answer('Ism familiyani kiriting\nMasalan: Aliyev Ali', reply_markup=await menus.remove_keyboard())
+    await bot.set_my_commands(commands=await bot_commands.cancel(), scope=BotCommandScopeChat(message.chat.id))
+    await message.answer('Ism familiyani kiriting\nMasalan: Aliyev Ali')
 
 
 @dp.message_handler(state=Birthday.name, content_types=types.ContentType.ANY)
 async def get_full_name(message: types.Message, state: FSMContext):
-
     if message.text:
-        await state.update_data(name=message.text)
+        if not is_name_correct(message.text):
+            await message.answer('Ismda ishlatish mumkin bo`lmagan belgilar bor.')
+            return
+        await state.update_data(name=message.text.strip())
         await Birthday.next()
 
         await message.answer('Rasm jo`nating: ')
@@ -29,7 +35,14 @@ async def get_full_name(message: types.Message, state: FSMContext):
         await message.answer('Ism familiya noto`g`ri kiritildi!!!')
 
 
-@dp.message_handler(state=Birthday.image_path, content_types=types.ContentType.PHOTO)
+def is_name_correct(name: str):
+    for s in name:
+        if s == '/' or s == ';' or s == ':' or s == '\\' or s == '=' or s == '[' or s == ']' or s == '{' or s == '}':
+            return False
+    return True
+
+
+@dp.message_handler(state=Birthday.image_path, content_types=types.ContentType.ANY)
 async def get_image(message: types.Message, state: FSMContext):
     if message.photo:
         await Birthday.next()
@@ -43,7 +56,7 @@ async def get_image(message: types.Message, state: FSMContext):
         await message.answer("Rasm kiritilsin!!!")
 
 
-@dp.message_handler(state=Birthday.congrat, content_types=types.ContentType.TEXT)
+@dp.message_handler(state=Birthday.congrat, content_types=types.ContentType.ANY)
 async def get_description(message: types.Message, state: FSMContext):
     if message.text:
         await Birthday.next()
@@ -54,7 +67,7 @@ async def get_description(message: types.Message, state: FSMContext):
         await message.answer("Tarif noto`g`ri kiritildi!!!")
 
 
-@dp.message_handler(state=Birthday.date, content_types=types.ContentType.TEXT)
+@dp.message_handler(state=Birthday.date, content_types=types.ContentType.ANY)
 async def get_date(message: types.Message, state: FSMContext):
     err = 'Sana noto`g`ri kiritildi!!!'
     if message.text:
@@ -73,7 +86,7 @@ async def get_date(message: types.Message, state: FSMContext):
 
 
 async def send_list_groups(message: types.Message):
-    groups = api.list_groups()
+    groups = api.get(addr=api.list_groups)
     buttons = types.InlineKeyboardMarkup()
 
     for group in groups:
@@ -82,10 +95,10 @@ async def send_list_groups(message: types.Message):
         for admin in admins:
             if admin.user.id == message.from_id:
                 chat = await bot.get_chat(chat_id)
-                buttons.add(types.InlineKeyboardButton(text=chat.title, callback_data='g'+str(idx)))
+                buttons.add(types.InlineKeyboardButton(text=chat.title, callback_data='g' + str(idx)))
 
-    id = api.get_user(message.from_id)['id']
-    buttons.add(types.InlineKeyboardButton(text='O`zim uchun', callback_data='u'+str(id)))
+    id = api.get(message.from_id, api.get_or_update_user)['id']
+    buttons.add(types.InlineKeyboardButton(text='O`zim uchun', callback_data='u' + str(id)))
     buttons.add(types.InlineKeyboardButton(text='Tugatish', callback_data='end'))
     await message.answer('Qayerga qo`shilsin? ', reply_markup=buttons)
 
@@ -96,7 +109,7 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
 
     groups_id = []
     inline_keyboard = callback.message.reply_markup.inline_keyboard
-    for i in range(len(inline_keyboard)-2):
+    for i in range(len(inline_keyboard) - 2):
         for inline_button in inline_keyboard[i]:
             if inline_button.text.endswith('✅'):
                 groups_id.append(int(inline_button.callback_data[1:]))
@@ -107,7 +120,7 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
         # user_id = api.get_user(callback.from_user.id)['id']
         data['user'] = int(myself.callback_data[1:])
 
-    api.add_birthday(data)
+    api.post(addr=api.add_birthday, data=data)
     await state.reset_state()
 
     await callback.message.delete_reply_markup()
@@ -117,7 +130,7 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
 
 
 @dp.callback_query_handler(state=Birthday.chat_list)
-async def edit_checked_button(callback: types.CallbackQuery, state: FSMContext):
+async def edit_checked_button(callback: types.CallbackQuery):
     edited_keyboard = types.InlineKeyboardMarkup()
     for inline_button in callback.message.reply_markup.inline_keyboard:
         inline_button = inline_button[0]
