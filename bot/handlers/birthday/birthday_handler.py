@@ -18,7 +18,8 @@ async def input_birthday(message: types.Message):
     await Birthday.first()
 
     await bot.set_my_commands(commands=await bot_commands.cancel(), scope=BotCommandScopeChat(message.chat.id))
-    await message.answer('Ism familiyani kiriting\nMasalan: Aliyev Ali')
+    await message.answer(text='Sizdan tug`ilgan kun egasi haqida ma\'lumot kiritish so`raladi.')
+    await message.answer('Ism kiriting\nMasalan: Jasur')
 
 
 @dp.message_handler(state=Birthday.name, content_types=types.ContentType.ANY)
@@ -32,7 +33,7 @@ async def get_full_name(message: types.Message, state: FSMContext):
 
         await message.answer('Rasm jo`nating: ')
     else:
-        await message.answer('Ism familiya noto`g`ri kiritildi!!!')
+        await message.answer('Ism noto`g`ri kiritildi!!!')
 
 
 def is_name_correct(name: str):
@@ -51,7 +52,7 @@ async def get_image(message: types.Message, state: FSMContext):
         await file.download(destination_dir=MEDIA_ROOT)
         await state.update_data(image_path=file.file_path)
 
-        await message.answer('Tarif kiriting: ')
+        await message.answer('Tabrik so`zini kiriting kiriting: ')
     else:
         await message.answer("Rasm kiritilsin!!!")
 
@@ -62,9 +63,9 @@ async def get_description(message: types.Message, state: FSMContext):
         await Birthday.next()
         await state.update_data(congrat=message.text)
 
-        await message.answer('Sana kiriting (yil.oy.kun)\nMasalan: 2000-01-01')
+        await message.answer('Tug`ilgan sana kiritilsin (yil.oy.kun)\nMasalan: 2000-01-01')
     else:
-        await message.answer("Tarif noto`g`ri kiritildi!!!")
+        await message.answer("Tabrik noto`g`ri kiritildi!!!")
 
 
 @dp.message_handler(state=Birthday.date, content_types=types.ContentType.ANY)
@@ -95,12 +96,12 @@ async def send_list_groups(message: types.Message):
         for admin in admins:
             if admin.user.id == message.from_id:
                 chat = await bot.get_chat(chat_id)
-                buttons.add(types.InlineKeyboardButton(text=chat.title, callback_data='g' + str(idx)))
+                buttons.add(types.InlineKeyboardButton(text=chat.title + ' (guruh)', callback_data='g' + str(idx)))
 
-    id = api.get(message.from_id, api.get_or_update_user)['id']
-    buttons.add(types.InlineKeyboardButton(text='O`zim uchun', callback_data='u' + str(id)))
+    pk = api.get(message.from_id, api.get_or_update_user)['id']
+    buttons.add(types.InlineKeyboardButton(text='Menga', callback_data='u' + str(pk)))
     buttons.add(types.InlineKeyboardButton(text='Tugatish', callback_data='end'))
-    await message.answer('Qayerga qo`shilsin? ', reply_markup=buttons)
+    await message.answer('Tug`ilgan kun haqida qayerlarda ma\'lumot berilsin.', reply_markup=buttons)
 
 
 @dp.callback_query_handler(Text(equals='end', ignore_case=True), state=Birthday.chat_list)
