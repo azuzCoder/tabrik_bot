@@ -11,7 +11,7 @@ add_user = _user + 'add'  # data is required
 
 
 ''' addrs for GROUP '''
-get_group = 'group/'  # chat_id is required
+get_or_update_group = 'group/'  # chat_id is required
 get_group_by_id = 'group/id/'  # id is required
 list_groups = 'group/add'  # empty
 add_group = 'group/add'  # data is required
