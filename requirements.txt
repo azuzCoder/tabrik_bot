@@ -18,6 +18,7 @@ magic-filter==1.0.9
 motor==3.1.1
 multidict==6.0.4
 Pillow==9.4.0
+psycopg2-binary==2.9.5
 pymongo==4.3.3
 pytz==2022.7.1
 pytz-deprecation-shim==0.1.0.post0

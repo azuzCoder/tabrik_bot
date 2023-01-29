@@ -11,6 +11,7 @@ from config.settings import MEDIA_ROOT
 from bot.middlewares.config import bot, dp
 from bot.middlewares.states import Birthday
 from bot.middlewares import api, bot_commands
+from bot.middlewares.scheduler_tasks import checking_birthday, send_user_group
 
 
 @dp.message_handler(commands=['add_birthday'])
@@ -26,7 +27,7 @@ async def input_birthday(message: types.Message):
 async def get_full_name(message: types.Message, state: FSMContext):
     if message.text:
         if not is_name_correct(message.text):
-            await message.answer('Ismda ishlatish mumkin bo`lmagan belgilar bor.')
+            await message.answer('Ismda ishlatish mumkin bo`lmagan belgilar bor \n(/ ; : \\ = [] {}).')
             return
         await state.update_data(name=message.text.strip())
         await Birthday.next()
@@ -52,6 +53,12 @@ async def get_image(message: types.Message, state: FSMContext):
         await file.download(destination_dir=MEDIA_ROOT)
         await state.update_data(image_path=file.file_path)
 
+        await message.answer('Tabrik so`zini kiriting kiriting: ')
+    elif message.document and message.document.mime_base == 'image':
+        await Birthday.next()
+        file = await bot.get_file(message.document.file_id)
+        await message.document.download(destination_dir=MEDIA_ROOT)
+        await state.update_data(image_path=file.file_path)
         await message.answer('Tabrik so`zini kiriting kiriting: ')
     else:
         await message.answer("Rasm kiritilsin!!!")
@@ -122,6 +129,8 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
         data['user'] = int(myself.callback_data[1:])
 
     api.post(addr=api.add_birthday, data=data)
+    if checking_birthday(data['date']):
+        await send_user_group(**data)
     await state.reset_state()
 
     await callback.message.delete_reply_markup()
