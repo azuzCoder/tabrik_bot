@@ -59,7 +59,11 @@ async def send_congrat(chat_id, name, congrat, image_path):
     Function sends congratulation to groups or users
     """
     caption = f"🥳🥳🥳🥳🥳🥳🥳 Bugun biz uchun qadrdon bo`lgan {name}ning tug`ilgan kuni.\n{congrat}\n\n@{(await bot.get_me()).username}"
-    await bot.send_photo(chat_id=chat_id, photo=types.InputFile(MEDIA_ROOT / image_path), caption=caption)
+    try:
+        await bot.send_photo(chat_id=chat_id, photo=types.InputFile(MEDIA_ROOT / image_path), caption=caption)
+    except:
+        await bot.send_message(chat_id=chat_id, text=caption)
+
 
 
 def checking_birthday(date):
