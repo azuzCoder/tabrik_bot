@@ -21,7 +21,7 @@ async def congratulation():
         # await send_user(name, congrat, image_path, user_id)
 
 
-async def send_user_group(name, image_path, congrat, date, user, groups):
+async def send_user_group(name, image_path, congrat, date, user, groups, **kwargs):
     await send_group(date, name, congrat, image_path, groups)
     await send_user(name, congrat, image_path, user)
 
