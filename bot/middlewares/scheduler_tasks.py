@@ -21,12 +21,12 @@ async def congratulation():
         # await send_user(name, congrat, image_path, user_id)
 
 
-async def send_user_group(name, image_path, congrat, date, user, groups, **kwargs):
-    await send_group(date, name, congrat, image_path, groups)
-    await send_user(name, congrat, image_path, user)
+async def send_user_group(**kwargs):
+    await send_group(**kwargs)
+    await send_user(**kwargs)
 
 
-async def send_group(date, name, congrat, image_path, groups):
+async def send_group(date, name, congrat, image_path, groups, **kwargs):
     """
     :param congrat: str - congratulation
     :param name: str - name of birthday owner
@@ -41,11 +41,12 @@ async def send_group(date, name, congrat, image_path, groups):
                 await send_congrat(chat_id, name, congrat, image_path)
 
 
-async def send_user(name, congrat, image_path, user_id):
-    if user_id:
-        user = api.get(pk=user_id, addr=api.get_user_by_id)
-        if user['joined']:
-            await send_congrat(user['chat_id'], name, congrat, image_path)
+async def send_user(date, name, congrat, image_path, user_id, **kwargs):
+    if checking_birthday(date):
+        if user_id:
+            user = api.get(pk=user_id, addr=api.get_user_by_id)
+            if user['joined']:
+                await send_congrat(user['chat_id'], name, congrat, image_path)
 
 
 async def send_congrat(chat_id, name, congrat, image_path):
@@ -63,7 +64,6 @@ async def send_congrat(chat_id, name, congrat, image_path):
         await bot.send_photo(chat_id=chat_id, photo=types.InputFile(MEDIA_ROOT / image_path), caption=caption)
     except:
         await bot.send_message(chat_id=chat_id, text=caption)
-
 
 
 def checking_birthday(date):
