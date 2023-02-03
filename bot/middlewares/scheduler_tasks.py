@@ -22,8 +22,9 @@ async def congratulation():
 
 
 async def send_user_group(**kwargs):
-    await send_group(**kwargs)
-    await send_user(**kwargs)
+    if checking_birthday(kwargs['date']):
+        await send_group(**kwargs)
+        await send_user(**kwargs)
 
 
 async def send_group(date, name, congrat, image_path, groups, **kwargs):
@@ -34,19 +35,18 @@ async def send_group(date, name, congrat, image_path, groups, **kwargs):
     :param groups: List[int] - groups' id.
     :return: None
     """
-    if checking_birthday(date):
-        for group_id in groups:
-            idx, chat_id, joined = api.get(group_id, api.get_group_by_id).values()
-            if joined:
-                await send_congrat(chat_id, name, congrat, image_path)
+
+    for group_id in groups:
+        idx, chat_id, joined = api.get(group_id, api.get_group_by_id).values()
+        if joined:
+            await send_congrat(chat_id, name, congrat, image_path)
 
 
 async def send_user(date, name, congrat, image_path, user, **kwargs):
-    if checking_birthday(date):
-        if user:
-            user = api.get(pk=user, addr=api.get_user_by_id)
-            if user['joined']:
-                await send_congrat(user['chat_id'], name, congrat, image_path)
+    if user:
+        userx = api.get(pk=user, addr=api.get_user_by_id)
+        if userx['joined']:
+            await send_congrat(userx['chat_id'], name, congrat, image_path)
 
 
 async def send_congrat(chat_id, name, congrat, image_path):
