@@ -41,10 +41,10 @@ async def send_group(date, name, congrat, image_path, groups, **kwargs):
                 await send_congrat(chat_id, name, congrat, image_path)
 
 
-async def send_user(date, name, congrat, image_path, user_id, **kwargs):
+async def send_user(date, name, congrat, image_path, user, **kwargs):
     if checking_birthday(date):
-        if user_id:
-            user = api.get(pk=user_id, addr=api.get_user_by_id)
+        if user:
+            user = api.get(pk=user, addr=api.get_user_by_id)
             if user['joined']:
                 await send_congrat(user['chat_id'], name, congrat, image_path)
 
