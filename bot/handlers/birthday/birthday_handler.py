@@ -128,7 +128,7 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
         # user_id = api.get_user(callback.from_user.id)['id']
         data['user'] = int(myself.callback_data[1:])
 
-    api.post(addr=api.add_birthday, data=data)
+    data = api.post(addr=api.add_birthday, data=data)
     if checking_birthday(data['date']):
         await send_user_group(**data)
     await state.reset_state()
