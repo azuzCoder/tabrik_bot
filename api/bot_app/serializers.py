@@ -7,7 +7,7 @@ class BirthdaySerializer(ModelSerializer):
 
     class Meta:
         model = Birthday
-        fields = ['id', 'name', 'image_path', 'congrat', 'date', 'user', 'groups']
+        fields = ['id', 'name', 'image_id', 'congrat', 'date', 'user', 'groups']
 
 
 class BirthdayForUserSerializer(ModelSerializer):
@@ -22,11 +22,11 @@ class BotUserSerializer(ModelSerializer):
 
     class Meta:
         model = BotUser
-        fields = ['id', 'chat_id', 'joined', 'birthdays']
+        fields = ['chat_id', 'joined', 'birthdays']
 
 
 class JoinedGroupSerializer(ModelSerializer):
 
     class Meta:
         model = JoinedGroup
-        fields = ['id', 'chat_id', 'joined']
+        fields = ['chat_id', 'joined']

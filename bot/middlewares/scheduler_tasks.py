@@ -13,7 +13,7 @@ async def congratulation():
 
     Function helps to send congratulations exact time to groups and users
     """
-    data = api.get(addr=api.list_birthdays)
+    data = api.get(addr=api.birthday)
     for birthday in data:
         await send_user_group(**birthday)
         # idx, name, image_path, congrat,date, user_id, groups = birthday.values()
@@ -27,7 +27,7 @@ async def send_user_group(**kwargs):
         await send_user(**kwargs)
 
 
-async def send_group(date, name, congrat, image_path, groups, **kwargs):
+async def send_group(date, name, congrat, image_id, groups, **kwargs):
     """
     :param congrat: str - congratulation
     :param name: str - name of birthday owner
@@ -37,19 +37,19 @@ async def send_group(date, name, congrat, image_path, groups, **kwargs):
     """
 
     for group_id in groups:
-        idx, chat_id, joined = api.get(group_id, api.get_group_by_id).values()
+        idx, chat_id, joined = api.get(group_id, api.group).values()
         if joined:
-            await send_congrat(chat_id, name, congrat, image_path)
+            await send_congrat(chat_id, name, congrat, image_id)
 
 
-async def send_user(date, name, congrat, image_path, user, **kwargs):
+async def send_user(date, name, congrat, image_id, user, **kwargs):
     if user:
-        userx = api.get(pk=user, addr=api.get_user_by_id)
+        userx = api.get(pk=user, addr=api.user)
         if userx['joined']:
-            await send_congrat(userx['chat_id'], name, congrat, image_path)
+            await send_congrat(userx['chat_id'], name, congrat, image_id)
 
 
-async def send_congrat(chat_id, name, congrat, image_path):
+async def send_congrat(chat_id, name, congrat, image_id):
     """
     :param chat_id:
     :param name:
@@ -61,7 +61,7 @@ async def send_congrat(chat_id, name, congrat, image_path):
     """
     caption = f"🥳🥳🥳🥳🥳🥳🥳 Bugun biz uchun qadrdon bo`lgan {name}ning tug`ilgan kuni.\n{congrat}\n\n@{(await bot.get_me()).username}"
     try:
-        await bot.send_photo(chat_id=chat_id, photo=types.InputFile(MEDIA_ROOT / image_path), caption=caption)
+        await bot.send_photo(chat_id=chat_id, photo=image_id, caption=caption)
     except:
         await bot.send_message(chat_id=chat_id, text=caption)
 

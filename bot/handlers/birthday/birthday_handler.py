@@ -7,7 +7,6 @@ from aiogram.dispatcher import FSMContext
 
 import datetime
 
-from config.settings import MEDIA_ROOT
 from bot.middlewares.config import bot, dp
 from bot.middlewares.states import Birthday
 from bot.middlewares import api, bot_commands
@@ -46,22 +45,12 @@ def is_name_correct(name: str):
 
 @dp.message_handler(state=Birthday.image_path, content_types=types.ContentType.ANY)
 async def get_image(message: types.Message, state: FSMContext):
-    if message.photo:
-        await Birthday.next()
-        file_id = message.photo[-1].file_id
-        file = await bot.get_file(file_id=file_id)
-        await file.download(destination_dir=MEDIA_ROOT)
-        await state.update_data(image_path=file.file_path)
-
-        await message.answer('Tabrik so`zini kiriting kiriting: ')
-    elif message.document and message.document.mime_base == 'image':
-        await Birthday.next()
-        file = await bot.get_file(message.document.file_id)
-        await message.document.download(destination_dir=MEDIA_ROOT)
-        await state.update_data(image_path=file.file_path)
-        await message.answer('Tabrik so`zini kiriting kiriting: ')
-    else:
+    if not (message.photo or message.document and message.document.mime_base == 'image'):
         await message.answer("Rasm kiritilsin!!!")
+
+    await Birthday.next()
+    await state.update_data(image_id=get_file_id(message))
+    await message.answer('Tabrik so`zini kiriting kiriting: ')
 
 
 @dp.message_handler(state=Birthday.congrat, content_types=types.ContentType.ANY)
@@ -94,20 +83,19 @@ async def get_date(message: types.Message, state: FSMContext):
 
 
 async def send_list_groups(message: types.Message):
-    groups = api.get(addr=api.list_groups)
+    groups = api.get(addr=api.group)
     buttons = types.InlineKeyboardMarkup()
 
     for group in groups:
-        idx, chat_id, joined = group.values()
+        chat_id, joined = group.values()
         admins = await bot.get_chat_administrators(chat_id)
         for admin in admins:
             if admin.user.id == message.from_id:
                 chat = await bot.get_chat(chat_id)
-                buttons.add(types.InlineKeyboardButton(text=chat.title + ' (guruh)', callback_data='g' + str(idx)))
+                buttons.add(types.InlineKeyboardButton(text=chat.title + ' (guruh)', callback_data='g' + str(chat_id)))
 
-    pk = api.get(message.from_id, api.get_or_update_user)['id']
-    buttons.add(types.InlineKeyboardButton(text='Menga', callback_data='u' + str(pk)))
-    buttons.add(types.InlineKeyboardButton(text='Tugatish', callback_data='end'))
+    buttons.add(types.InlineKeyboardButton(text='Menga', callback_data='u' + str(message.from_id)))
+    buttons.add(types.InlineKeyboardButton(text='Mal\'lumotlarni saqlash', callback_data='end'))
     await message.answer('Tug`ilgan kun haqida qayerlarda ma\'lumot berilsin.', reply_markup=buttons)
 
 
@@ -128,7 +116,7 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
         # user_id = api.get_user(callback.from_user.id)['id']
         data['user'] = int(myself.callback_data[1:])
 
-    data = api.post(addr=api.add_birthday, data=data)
+    data = api.post(addr=api.birthday, data=data)
     if checking_birthday(data['date']):
         await send_user_group(**data)
     await state.reset_state()
@@ -162,3 +150,9 @@ async def edit_checked_button(callback: types.CallbackQuery):
                 callback_data=inline_button.callback_data)
             )
     await callback.message.edit_reply_markup(edited_keyboard)
+
+
+def get_file_id(message: types.Message):
+    if message.photo:
+        return message.photo[-1].file_id
+    return message.document.file_id

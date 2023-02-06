@@ -2,20 +2,18 @@ from datetime import date
 
 from aiogram import types
 
-from bot.middlewares.config import dp, bot
+from bot.middlewares.config import dp
 from bot.middlewares import api
 
 
 @dp.message_handler(commands=['list_birthdays'])
 async def list_birthdays(message: types.Message):
-    birthdays = api.get(pk=message.chat.id, addr=api.get_or_update_user)['birthdays']
-    print(birthdays)
+    birthdays = api.get(pk=message.chat.id, addr=api.user)['birthdays']
     if len(birthdays) == 0:
         await message.answer('Sizda hali tug`ilgan kun qo`shilmagan.')
         return
 
     birthdays.sort(key=lambda s: (date.fromisoformat(s['date']).month, date.fromisoformat(s['date']).day))
-    print(birthdays)
 
     text = ''
     curr = date.fromisoformat(birthdays[0]['date']).month

@@ -11,22 +11,21 @@ async def get_new_chat_member(message: types.Message):
             'chat_id': message.chat.id,
             'joined': True
         }
-        group = api.get(message.chat.id, api.get_or_update_group)
+        group = api.get(message.chat.id, api.group)
         if group:
-            api.put(message.chat.id, api.get_or_update_group, data)
+            api.put(message.chat.id, api.group, data)
         else:
-            api.post(api.add_group, data)
+            api.post(api.group, data)
 
 
 @dp.message_handler(content_types=types.ContentType.LEFT_CHAT_MEMBER)
 async def get_left_chat_member(message: types.Message):
 
     if message['left_chat_member']['id'] == bot.id:
-        group_id = api.get(message.chat.id, api.get_or_update_group)
+        group_id = api.get(message.chat.id, api.group)
         data = {
-            'id': group_id,
             'chat_id': message.chat.id,
             'joined': False
         }
-        api.put(message.chat.id, api.get_or_update_group, data)
+        api.put(message.chat.id, api.group, data)
         print("Succefully!!!")

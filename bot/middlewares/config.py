@@ -7,7 +7,8 @@ from aiogram.contrib.fsm_storage.mongo import MongoStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
-BOT_TOKEN = 'BOT_TOKEN'
+# BOT_TOKEN = 'BOT_TOKEN'
+BOT_TOKEN = '5505071713:AAHEq4b8BSycSzpumbKzm25H0_3XBjjyCPc'
 
 bot = Bot(token=BOT_TOKEN)
 mongo_storage = MongoStorage()

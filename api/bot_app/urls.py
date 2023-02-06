@@ -1,18 +1,17 @@
 from django.urls import path
 
-from api.bot_app.views import (BotUserRetrieveView, BotUserCreateView, BotUserWithIdView,
-                               JoinedGroupRetrieveView, JoinedGroupCreateView, JoinedGroupGetWithIdView,
-                               BirthdayRetrieveView, BirthdayCreateView)
+from api.bot_app.views import (BotUserRUView, BotUserCLView,
+                               JoinedGroupRUView, JoinedGroupCLView,
+                               BirthdayRUView, BirthdayCLView)
 
 urlpatterns = [
-    path('user/<int:chat_id>', BotUserRetrieveView.as_view(), name='get-user'),
-    path('user/id/<int:pk>', BotUserWithIdView.as_view(), name='get-id-user'),
-    path('user/add', BotUserCreateView.as_view(), name='create-user'),
+    path('users/<int:chat_id>', BotUserRUView.as_view()),
+    path('users', BotUserCLView.as_view(),),
 
-    path('group/<int:chat_id>', JoinedGroupRetrieveView.as_view(), name='get-group'),
-    path('group/id/<int:pk>', JoinedGroupGetWithIdView.as_view(), name='get-id-group'),
-    path('group/add', JoinedGroupCreateView.as_view(), name='create-group'),
+    path('groups/<int:chat_id>', JoinedGroupRUView.as_view()),
+    path('groups', JoinedGroupCLView.as_view()),
 
-    path('birthday/<int:pk>', BirthdayRetrieveView.as_view(), name='get-birth'),
-    path('birthday/add', BirthdayCreateView.as_view(), name='create-birth'),
+    path('birthdays/<int:pk>', BirthdayRUView.as_view()),
+    path('birthdays', BirthdayCLView.as_view()),
 ]
+

@@ -14,6 +14,6 @@ if __name__ == '__main__':
     scheduler.start()
     scheduler.remove_all_jobs()
     scheduler.pause()
-    scheduler.add_job(func=scheduler_tasks.congratulation, trigger='cron', day_of_week='*', hour=0, minute=5)
+    scheduler.add_job(func=scheduler_tasks.congratulation, trigger='cron', day_of_week='*', hour=13, minute=20)
     scheduler.resume()
     executor.start_polling(skip_updates=True, dispatcher=dp)
