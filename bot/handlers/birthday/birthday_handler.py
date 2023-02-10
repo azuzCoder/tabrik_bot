@@ -8,28 +8,32 @@ from aiogram.dispatcher import FSMContext
 import datetime
 
 from bot.middlewares.config import bot, dp
-from bot.middlewares.states import Birthday
+from bot.middlewares.states import Birthday, EditBirthday
+from bot.middlewares import menus
 from bot.middlewares import api, bot_commands
-from bot.middlewares.scheduler_tasks import checking_birthday, send_user_group
+from bot.middlewares.scheduler_tasks import send_user_group, send_congrat
 
 
 @dp.message_handler(commands=['add_birthday'])
-async def input_birthday(message: types.Message):
-    await Birthday.first()
+async def input_birthday(message: types.Message, edit: bool=False):
+    await Birthday.name.set()
+    if edit:
+        await message.answer(text='Iltimos malumotlarni qayta kiriting: ')
+    else:
+        await message.answer(text='Sizdan tug`ilgan kun egasi haqida ma\'lumot kiritish so`raladi.')
 
     await bot.set_my_commands(commands=await bot_commands.cancel(), scope=BotCommandScopeChat(message.chat.id))
-    await message.answer(text='Sizdan tug`ilgan kun egasi haqida ma\'lumot kiritish so`raladi.')
     await message.answer('Ism kiriting\nMasalan: Jasur')
 
 
 @dp.message_handler(state=Birthday.name, content_types=types.ContentType.ANY)
-async def get_full_name(message: types.Message, state: FSMContext):
+async def get_name(message: types.Message, state: FSMContext):
     if message.text:
         if not is_name_correct(message.text):
             await message.answer('Ismda ishlatish mumkin bo`lmagan belgilar bor \n(/ ; : \\ = [] {}).')
             return
         await state.update_data(name=message.text.strip())
-        await Birthday.next()
+        await Birthday.image_id.set()
 
         await message.answer('Rasm jo`nating: ')
     else:
@@ -43,20 +47,20 @@ def is_name_correct(name: str):
     return True
 
 
-@dp.message_handler(state=Birthday.image_path, content_types=types.ContentType.ANY)
+@dp.message_handler(state=Birthday.image_id, content_types=types.ContentType.ANY)
 async def get_image(message: types.Message, state: FSMContext):
     if not (message.photo or message.document and message.document.mime_base == 'image'):
         await message.answer("Rasm kiritilsin!!!")
 
-    await Birthday.next()
+    await Birthday.congrat.set()
     await state.update_data(image_id=get_file_id(message))
     await message.answer('Tabrik so`zini kiriting kiriting: ')
 
 
 @dp.message_handler(state=Birthday.congrat, content_types=types.ContentType.ANY)
-async def get_description(message: types.Message, state: FSMContext):
+async def get_congrat(message: types.Message, state: FSMContext):
     if message.text:
-        await Birthday.next()
+        await Birthday.date.set()
         await state.update_data(congrat=message.text)
 
         await message.answer('Tug`ilgan sana kiritilsin (yil.oy.kun)\nMasalan: 2000-01-01')
@@ -67,22 +71,35 @@ async def get_description(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Birthday.date, content_types=types.ContentType.ANY)
 async def get_date(message: types.Message, state: FSMContext):
     err = 'Sana noto`g`ri kiritildi!!!'
-    if message.text:
-        try:
-            datetime.date.fromisoformat(message.text)
-        except:
-            await message.answer(err)
-            return
-
+    if message.text and is_date_correct(message.text):
         await state.update_data(date=message.text)
-        await Birthday.next()
-        await send_list_groups(message=message)
+        data = await state.get_data()
+        await Birthday.is_correct.set()
+        await send_congrat(chat_id=message.from_user.id, name=data['name'], congrat=data['congrat'], image_id=data['image_id'])
+
+        await message.answer(text='Malumotlar to`g`rimi?', reply_markup=await menus.is_correct_menu())
 
     else:
         await message.answer(err)
 
 
-async def send_list_groups(message: types.Message):
+@dp.callback_query_handler(state=Birthday.is_correct)
+async def is_correct(callback: types.CallbackQuery, state: FSMContext):
+    data = callback.data
+    if data == 'yes':
+        await send_list_groups(callback=callback)
+    elif data == 'delete':
+        from bot.handlers.start_handler import cancel_handler
+        await cancel_handler(callback.message, state)
+    elif data == 'edit':
+        await EditBirthday.basic.set()
+        print(await state.get_state())
+        await callback.message.answer(text='Nimani o`zgartirmoqchisiz?', reply_markup=menus.edit_menu())
+    await callback.message.delete_reply_markup()
+
+
+async def send_list_groups(callback: types.CallbackQuery):
+    await Birthday.chat_list.set()
     groups = api.get(addr=api.group)
     buttons = types.InlineKeyboardMarkup()
 
@@ -90,13 +107,13 @@ async def send_list_groups(message: types.Message):
         chat_id, joined = group.values()
         admins = await bot.get_chat_administrators(chat_id)
         for admin in admins:
-            if admin.user.id == message.from_id:
+            if admin.user.id == callback.from_user.id:
                 chat = await bot.get_chat(chat_id)
                 buttons.add(types.InlineKeyboardButton(text=chat.title + ' (guruh)', callback_data='g' + str(chat_id)))
 
-    buttons.add(types.InlineKeyboardButton(text='Menga', callback_data='u' + str(message.from_id)))
+    buttons.add(types.InlineKeyboardButton(text='Menga', callback_data='u' + str(callback.from_user.id)))
     buttons.add(types.InlineKeyboardButton(text='Mal\'lumotlarni saqlash', callback_data='end'))
-    await message.answer('Tug`ilgan kun haqida qayerlarda ma\'lumot berilsin.', reply_markup=buttons)
+    await callback.message.answer('Tug`ilgan kun haqida qayerlarda ma\'lumot berilsin.', reply_markup=buttons)
 
 
 @dp.callback_query_handler(Text(equals='end', ignore_case=True), state=Birthday.chat_list)
@@ -113,12 +130,10 @@ async def end_callback(callback: types.CallbackQuery, state: FSMContext):
     myself = callback.message.reply_markup.inline_keyboard[-2][0]
     data['groups'] = groups_id
     if myself.text.endswith('✅'):
-        # user_id = api.get_user(callback.from_user.id)['id']
         data['user'] = int(myself.callback_data[1:])
 
     data = api.post(addr=api.birthday, data=data)
-    if checking_birthday(data['date']):
-        await send_user_group(**data)
+    await send_user_group(**data)
     await state.reset_state()
 
     await callback.message.delete_reply_markup()
@@ -132,23 +147,19 @@ async def edit_checked_button(callback: types.CallbackQuery):
     edited_keyboard = types.InlineKeyboardMarkup()
     for inline_button in callback.message.reply_markup.inline_keyboard:
         inline_button = inline_button[0]
-
+        data = str(inline_button.callback_data)
         if inline_button.callback_data == callback.data:
             if inline_button.text.endswith('✅'):
-                edited_keyboard.add(types.InlineKeyboardButton(
-                    text=inline_button.text.rstrip('✅'),
-                    callback_data=str(inline_button.callback_data)
-                ))
+                text = inline_button.text.rstrip('✅')
             else:
-                edited_keyboard.add(types.InlineKeyboardButton(
-                    text=inline_button.text + '✅',
-                    callback_data=str(inline_button.callback_data)
-                ))
+                text = inline_button.text + '✅'
         else:
+            text = inline_button.text
+        if text:
             edited_keyboard.add(types.InlineKeyboardButton(
-                text=inline_button.text,
-                callback_data=inline_button.callback_data)
-            )
+                text=text,
+                callback_data=data
+            ))
     await callback.message.edit_reply_markup(edited_keyboard)
 
 
@@ -156,3 +167,11 @@ def get_file_id(message: types.Message):
     if message.photo:
         return message.photo[-1].file_id
     return message.document.file_id
+
+
+def is_date_correct(date: str):
+    try:
+        datetime.date.fromisoformat(date)
+        return True
+    except:
+        return False

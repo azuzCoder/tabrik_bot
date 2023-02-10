@@ -23,7 +23,6 @@ def put(pk: int, addr: str, data: dict):
 
 
 def result(res):
-    print(res.text)
     if res.ok:
         return res.json()
     return None

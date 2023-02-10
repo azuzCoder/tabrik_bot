@@ -8,7 +8,7 @@ from bot.middlewares.config import dp, scheduler
 from bot.middlewares import scheduler_tasks
 
 from bot.handlers import start_handler, group_handler
-from bot.handlers.birthday import birthday_handler, list_birtdays
+from bot.handlers.birthday import birthday_handler, list_birtdays, edit_birthday
 
 if __name__ == '__main__':
     scheduler.start()

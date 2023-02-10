@@ -16,14 +16,13 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 
 @dp.message_handler(commands='start')
 async def start(message: types.Message):
-    user = api.get(message.from_id, api.user)
+    user = api.get(message.from_user.id, api.user)
     data = {
-        'chat_id': message.from_id,
+        'chat_id': message.from_user.id,
         'joined': True
     }
     if user:
-        data['id'] = user['id']
-        api.put(message.from_id, api.user, data)
+        api.put(message.from_user.id, api.user, data)
     else:
         api.post(api.user, data)
 
