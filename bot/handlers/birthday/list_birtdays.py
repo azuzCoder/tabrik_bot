@@ -8,6 +8,7 @@ from bot.middlewares import api
 
 @dp.message_handler(commands=['list_birthdays'])
 async def list_birthdays(message: types.Message):
+    print(message)
     birthdays = api.get(pk=message.chat.id, addr=api.user)['birthdays']
     if len(birthdays) == 0:
         await message.answer('Sizda hali tug`ilgan kun qo`shilmagan.')
